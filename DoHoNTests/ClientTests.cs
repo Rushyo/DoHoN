@@ -14,7 +14,7 @@ namespace DoHoNTests
     {
         private const String TestName = "example.com";
         private const String TestExpectedIPv4 = "93.184.216.34";
-        private const String TestExpectedIPv6 = "2606:2800:220:1:248:1893:25c8:1946";
+        private const String TestExpectedIPv6 = "2606:2800:220:1:248:1893:25c8:1946"; //This is kinda dangerous - we should probably look at the /64 range at least
 
         [TestMethod]
         [TestCategory("Non-Deterministic")]
@@ -78,6 +78,21 @@ namespace DoHoNTests
 
         [TestMethod]
         [TestCategory("Non-Deterministic")]
+        public void LookupSync_PTR()
+        {
+            using (var client = new DoHClient())
+            {
+                client.RequireDNSSEC = false;
+                String ipLookup = String.Join(".", TestExpectedIPv4.Split(".", StringSplitOptions.RemoveEmptyEntries)) + ".in-addr.arpa";
+                IEnumerable<DNSAnswer> results = client.LookupSync(ipLookup, ResourceRecordType.PTR).ToArray();
+                Assert.IsTrue(results.Any(r => r.Data.Contains("34-216-184-93"))); //Badly need a better test
+                Assert.IsFalse(results.Any(r => r.TTL < 0));
+                Assert.IsFalse(results.Any(r => r.RecordType != ResourceRecordType.PTR));
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("Non-Deterministic")]
         public void LookupSync_AAAA()
         {
             using (var client = new DoHClient())
@@ -114,12 +129,13 @@ namespace DoHoNTests
                 }
                 catch(AggregateException ex)
                 {
-                    Assert.IsTrue(ex.GetType() == typeof(AggregateException) && ex.InnerException.GetType() == typeof(DNSLookupException));
+                    Assert.IsTrue(ex.InnerException.GetType() == typeof(DNSLookupException));
+                    Assert.IsTrue(((DNSLookupException)ex.InnerException).InnerExceptions.First().Message == "Received DNS RCode 4 when performing lookup: Not Implemented");
                     return;
                 }
                 catch(DNSLookupException ex)
                 {
-                    Assert.IsTrue(ex.GetType() == typeof(DNSLookupException));
+                    Assert.IsTrue(ex.InnerException.Message == "Received DNS RCode 4 when performing lookup: Not Implemented");
                     return;
                 }
                 Assert.Fail("Expected exception to occur");

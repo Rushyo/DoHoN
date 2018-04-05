@@ -35,7 +35,6 @@ namespace DoHoN
             { 7, "RR Set Exists when it should not" },
             { 8, "RR Set that should exist does not" },
             { 9, "Server Not Authoritative for zone" },
-            { 9, "Not Authorized" },
             { 10, "Name not contained in zone" },
             { 16, "Bad OPT Version / TSIG Signature Failure" },
             { 17, "Key not recognized" },
@@ -97,14 +96,14 @@ namespace DoHoN
                     return hit.Answers;
             }
 
-            var storedExceptions = new List<DNSLookupException>();
+            var storedExceptions = new ConcurrentBag<DNSLookupException>();
             foreach (String endpoint in _endpointList)
             {
                 try
                 {
                     Task<IEnumerable<DNSAnswer>> lookupTask = SingleLookup(name, recordType, endpoint);
                     DNSAnswer[] answers = (await lookupTask).ToArray();
-                    if(answers.Any())
+                    if(answers.Any() && !_answersCache.ContainsKey(queryParams))
                         _answersCache.TryAdd(queryParams, new DNSCacheEntry(answers));
                     return answers;
                 }
@@ -178,7 +177,7 @@ namespace DoHoN
             var fields = new Dictionary<String, String>()
             {
                 {"name", name},
-                {"type", queryType.ToString()},
+                {"type", ((Int32)queryType).ToString()},
                 {"ct", JsonContentType},
                 {"cd", RequireDNSSEC ? "false" : "true"},
             };
@@ -198,9 +197,9 @@ namespace DoHoN
         {
             String commentText = comment != null ? $"{Environment.NewLine}Server Comment: ({comment})" : "";
             if(DNSCodes.ContainsKey(statusCode))
-                throw new InvalidOperationException($"Received DNS RCode {statusCode} when performing lookup: {DNSCodes[statusCode]}{commentText}");
+                throw new DNSLookupException($"Received DNS RCode {statusCode} when performing lookup: {DNSCodes[statusCode]}{commentText}");
 
-            throw new InvalidOperationException($"Received DNS RCode {statusCode} when performing lookup{commentText}");
+            throw new DNSLookupException($"Received DNS RCode {statusCode} when performing lookup{commentText}");
         }
 
         private String GeneratePadding(Int32 paddingLength)
