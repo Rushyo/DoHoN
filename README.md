@@ -1,7 +1,7 @@
 # DNS over HTTPS on .NET
 
 ![Supported](https://img.shields.io/badge/supported-yes%20(2021)-brightgreen)
-[![GitHub stars](https://img.shields.io/github/stars/Rushyo/VindicateTool.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/Rushyo/complexkspinstaller/stargazers/)
+[![GitHub stars](https://img.shields.io/github/stars/Rushyo/DoHon.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/Rushyo/DoHon/stargazers/)
 
 DoHoN (*stylised ドホン*) is a [DNS over HTTPS](https://developers.cloudflare.com/1.1.1.1/dns-over-https/) client for .NET. It's simple, clean, fast, and supports both synchronous and asynchronous usage with caching (and respects TTLs!). It uses .NET Core 2.0 to provide cross-compatibility across multiple OSes. It uses the `application/dns-json` format.
 
