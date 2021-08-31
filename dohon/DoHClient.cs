@@ -15,7 +15,7 @@ namespace DoHoN
     public class DoHClient : IDisposable
     {
         public const String CloudflareURI = "https://cloudflare-dns.com/dns-query";
-        public const String GoogleURI = "https://dns.google.com/resolve";
+        public const String GoogleURI = "https://dns.google/resolve";
         public Boolean UseRandomPadding = true;
         public Boolean RequireDNSSEC = true;
         public Boolean RequestNoGeolocation = true;
@@ -172,13 +172,13 @@ namespace DoHoN
             return answers?.OfType<JObject>().Select(DNSAnswer.FromJSON) ?? new DNSAnswer[] {};
         }
 
-        private String GenerateQuery(String name, String serverURI, ResourceRecordType queryType)
+        private String GenerateQuery(String name, String serverURI, ResourceRecordType queryType, String? customContentType = null)
         {
             var fields = new Dictionary<String, String>()
             {
                 {"name", name},
                 {"type", ((Int32)queryType).ToString()},
-                {"ct", JsonContentType},
+                {"ct", customContentType ?? JsonContentType},
                 {"cd", RequireDNSSEC ? "false" : "true"},
             };
 
